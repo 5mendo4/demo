@@ -1,13 +1,58 @@
 ﻿<#
-.SYNOPSIS
-Interactive PowerShell training material
+    .SYNOPSIS
+    Interactive PowerShell training material
 
-.DESCRIPTION
-Basic Powershell concepts, examples or solutions that can actually be ran and tested.
+    .DESCRIPTION
+    Basic Powershell concepts, examples or solutions that can actually be ran and tested.
 
-.NOTES
-Author: Addison Mendoza
+    .NOTES
+    Author: Addison Mendoza
 #>
+
+#region Initial Tips
+
+###################################################################
+#                            Initial Tips                         #
+###################################################################
+
+<#
+    PowerShell is a massive ever growing and evolving programming
+    language. Just like many other programming languages out there, 
+    it's almost impossible to know everything there is to know about 
+    it. A better and more efficient approach that will give you a 
+    competitive edge is to follow these key pillars of programming 
+    with not only PowerShell but other languages as well.
+    
+    1. Have a plan and a purpose. ShadowIT may help companies in the 
+    short run but hurts them in the long run. Make sure your solution: 
+        - has purpose
+        - doesn't reinvent the wheel
+        - is well thought out with a project plan behind it
+
+    2. Don't try to memorize every command - that's impossible. 
+    Instead, just remember these heavily used commands that will get 
+    the information for you: 
+        - Get-Help
+        - Get-Member
+        - Get-Command
+
+    3. Follow best programming practices
+        - Comment your code
+        - Don't overcomplicate your code with nested loops
+        - Streamline if/elseif statements when possible
+        - Follow proper variable and function naming standards
+        - Always perform user input validation
+        - Gracefully catch and handle errors whenever possible
+        - Clean up unused code or variables to free system resources
+        - Attempt to make your code as dynamic and scalable as possible
+
+    4. Keep security in mind
+        - Do not hard code any confidential or proprietary information
+        - Compile and/or sign code whenever possible
+        - Properly store code behind well configured Git repos
+#>
+
+#endregion
 
 #region Variables
 
@@ -17,14 +62,59 @@ Author: Addison Mendoza
 <#
     A variable is an item that can store data and be called upon
     The more variables created and more data stored within variables during a PowerShell session consumes more memory on a computer
-    It's best practice to re-use or release variables (garbage cleanup) to prevent memory leaks and poor computer performance
+    In some scenarios, it may be preferable to reuse or release variables (garbage cleanup) to prevent memory leaks and poor computer performance
 #>
 
-# Store information into a variable
+# ----------------------- Creating Variables -------------------- #
+# Create and store information into a variable
+# This method is the quick and easy method to create variables but it does not allow you to customize the variable
 $Variable1 = "Let's store this sentence into this variable"
 
-# Call upon variable
+# Alternative way to create and store information into a variable using the PowerShell command New-Variable
+# This way is longer but provides more features to customize your variable including the option to make it read only
+New-Variable -Name Variable2 -Value "We'll store this sentence into a variable also" -Description "second variable to demo variable code" -Scope global -Option ReadOnly
+
+# You can pipe data into a new variable
+"Let's pipe this sentence into a new variable" | New-Variable -Name Variable3
+
+# ------------------------ Variable Options --------------------- #
+<#
+    When creating variables using the New-Variable command, there are many options for the types of variables
+    None - Sets no options. None is the default.
+    ReadOnly - Can be deleted. Cannot be changed, except by using the Force parameter.
+    Private - The variable is available only in the current scope.
+    AllScope - The variable is copied to any new scopes that are created.
+    Constant - Cannot be deleted or changed. Exists only in the current PS session and is destroyed upon termination of the session
+#>
+
+# ----------------------- Modifying Variables -------------------- #
+# There are many ways to modify a variable (read further for examples) but here are a few
+$Variable1 = "Let's change the value of this variable"
+Set-Variable -Name Variable2 -Value "We'll also change this variable's value as well" -Option ReadOnly -Force
+$Variable3 = $null # This clears the variable of any data (not the same as an empty string '') but does not delete the variable
+"Let's pipe this new data into a variable" | Set-Variable -Name Variable3
+
+# ------------------------ Calling Variables --------------------- #
+# While there are many ways to call a variable, some methods are better suited for certain scenarios
+
+# Just declaring the variable by itself is the same thing as returning the value of the variable from the script or function (read further)
+# This is not suitable for displaying the value at that specific point in time of the script
 $Variable1
+$Variable2
+
+# Writing variable to host, information, warning or error displays the value of that variable at the time the code executes
+# Read further for the differences between the various write commands
+Write-Host $Variable3
+
+# Formatting a variable is another method to output data to the screen at the exact point in time the code excecutes without having the effects of a write command
+$Variable1 | Format-List
+$Variable2 | Format-Table
+
+# ------------------------ Removing Variables --------------------- #
+# Removing variables is important for not only security or memory consumption but for ease of troubleshooting as well
+
+# Deletes the variable Variable2 from memory - the force switch must be called since the variable was previously created as readonly
+Remove-Variable Variable2 -Force
 
 #endregion
 
@@ -99,7 +189,7 @@ $DataType8 = "45"
 ###################################################################
 
 # ------------------------------ Array -------------------------- #
-# Array is a collection of items.
+# An array is a collection of items.
 
 # One way to create an array is wrap your items in @() - PowerShell assumes the data type for $Array1 is an array because of this
 $Array1 = @(
@@ -138,7 +228,7 @@ $HashTable2.Add('Color','Pink')
 $HashTable2.Add('TopSpeedMPH','900')
 
 # ----------------------------- Objects ------------------------- #
-# PS Custom Object or PS Object is a collection of attributes and their values
+# PSCustomObject or PSObject is a collection of attributes and their values
 # While a hash table and object may seem similar, their data is constructed and accessed differently
 # PSObject vs PSCustomObject data types - These data types are essentially the same. Both are constructed the same and leveraged the same. However, the key differences is that the PSCustomObject data type is only available for PowerShell version 3.0 onward and processes faster than its predecessor, PSObject
 # PSCustomObject should ALWAYS be chosen over PSObject as long as your PS version permits
@@ -165,11 +255,27 @@ $PSObject | Add-Member -MemberType NoteProperty -Name VehicleType -Value car
 $PSObject | Add-Member -MemberType NoteProperty -Name Color -Value red
 $PSObject | Add-Member -MemberType NoteProperty -Name TopspeedMPH -Value 125
 
-# Array of pscustomobjects
+# A method to construct an array of pscustomobjects
 [pscustomobject[]]$Array5 = @(
     $PSCustomObject1,
     $PSCustomObject2,
     $PSCustomObject3
+)
+
+# Another method to construct an array of pscustomobjects by creating and converting hash tables within the array itself
+[pscustomobject[]]$Array6 = @(
+    [pscustomobject]@{
+        ObjectName = 'obj1'
+        ObjectSize = 'big'
+    },
+    [pscustomobject]@{
+        ObjectName = 'obj2'
+        ObjectSize = 'bigger'
+    },
+    [pscustomobject]@{
+        ObjectName = 'obj3'
+        ObjectSize = 'huge'
+    }
 )
 
 #endregion
@@ -192,6 +298,7 @@ $PSObject | Add-Member -MemberType NoteProperty -Name TopspeedMPH -Value 125
 $AdditionResult = 1 + 2
 $SubtractionResult = 1 - 2
 $DivisionResult = 10/2
+$MultiplicationResult = 5*5
 
 # ---------------------------- Assignment ----------------------- #
 # Operators used for managing variables
@@ -246,6 +353,30 @@ $AssignmentVariable2 --
 'test' -in @('orange','apple','pear')
 
 
+# ---------------------- Order of Operations ----------------- #
+# parentheses () play an important role in the order of operations when it comes to operators
+
+# Arithmetics in PowerShell also follow the order of operations so adding parentheses to a mathmatical equation can completely change the outcome
+$ArithmeticResult1 = 15/(5-2)
+$ArithmeticResult2 = 15/5-2
+
+# Adding parentheses in comparator logic can also change the outcome of a true or false statement
+# The below if/else statement does not contain parentheses and evaluates all three comparators against each other which results in a $true result
+if ($ArithmeticResult1 -lt 2 -and $ArithmeticResult2 -gt 2 -or 'hot' -ne 'cold') {
+    $true
+}
+else {
+    $false
+}
+
+# The below if/else statement contain parentheses and evaluates the first comparator against the last two comparators which results in a $false result
+if ($ArithmeticResult1 -lt 2 -and ($ArithmeticResult2 -gt 2 -or 'hot' -ne 'cold')) {
+    $true
+}
+else {
+    $false
+}
+
 #endregion
 
 #region Variable Scope
@@ -253,6 +384,56 @@ $AssignmentVariable2 --
 ###################################################################
 #                            Variable Scope                       #
 ###################################################################
+<#
+    Scoping plays an important role within not only a script but a module as well.
+    While there are three scope types, we will be focusing on just two: global & script
+    Variables may or may not be accessible depending on where they live (are scoped)
+
+    The importance as well as benefits of properly scoping your variables includes but is not limited to:
+    - Data security
+    - Processing performance
+    - Scripting efficiency
+    - Troubleshooting efficiency
+#>
+
+# ---------------------- Global Scope ----------------- #
+<#
+    Variables are considered within the "global" scope if they:
+    - Are created in the root of a PowerShell session
+    - Are declared as such using the $global: modifier
+
+    Global scope variables can be used anywhere in the PowerShell session and within any function or script called upon by the session
+    Global scope variables created using the $Global: modifier cannot be overwritten unless the modifier is used again when setting a new value
+#>
+
+# The variable $Variable1 created earlier in this script is considered a "global" scoped variable because it was created within the root of the script/outside of any function
+# It can be used within any function that is created within this script
+function Test-Scope1 {
+    Write-Host "Variable1 value: $Variable1"
+}
+Test-Scope1
+
+# The variable $Variable1 created earlier in this script is also considered "local" to the root of the script.
+# A variable of the same name created within a function supersedes the variable created outside of the function because it is local to that scope of the function
+# A variable created within a function will be destroyed when the function ends and does not overwrite a similarly named variable outside of the function unless the $script:  or $global: modifier is used
+function Test-Scope2 {
+    $Variable1 = 'This variable1 variable is local only to the Test-Scope2 function and will be destroyed when the function ends'
+    Write-Host "Variable1 value (within function): $Variable1"
+}
+Test-Scope2
+Write-Host "Variable1 value (outside function): $Variable1"
+
+# A variable created within a function using the $Script: or $Global: modifier will overwrite any similarly named variable that was created outside of the function
+$Variable4 = 'This is a script scope variable'
+function Test-Scope3 {
+    Write-Host "Original Variable4 value: $Variable4"
+    $Global:Variable4 = 'Overwriting variable4 from within the function using the $Global: modifier'
+}
+Test-Scope3
+Write-Host "New Variable4 value: $Variable4"
+
+# ---------------------- Script Scope ----------------- #
+# Work in progress
 
 #endregion
 
@@ -280,4 +461,6 @@ function Test-FunctionProcessingMethods {
         Write-Host "End block is only processed once "
     }
 }
+
+# Work in progress
 #endregion
